@@ -234,6 +234,26 @@ All deliverables will be merged into `main` via reviewed pull requests, with act
 
 ---
 
+## 👥 Team Roles
+
+Each team member contributes across the data pipeline, with ownership distributed by functional areas to ensure redundancy, skill sharing, and parallel progress.
+
+| Role | Responsibilities | Key Deliverables |
+|------|------------------|------------------|
+| **Data Engineering & Orchestration** | Set up Apache Airflow pipelines for ingestion, transformation, and scheduling. Manage dependencies, retries, and workflow monitoring. | Airflow DAGs, orchestration documentation, pipeline logs. |
+| **Data Ingestion & Storage** | Develop scripts for data extraction from Kaggle and APIs. Design S3 bucket structure and RDS schema. Ensure schema consistency and versioned data zones (raw → processed → analytical). | Ingestion scripts, S3/RDS setup, schema documentation. |
+| **Data Transformation & Modeling** | Implement transformation logic using Polars or PySpark. Perform joins, aggregations, and feature engineering. Create regression-ready analytical tables. | ETL scripts, transformation notebooks, derived metrics. |
+| **Testing & CI/CD Automation** | Build and maintain testing and validation layers. Implement Great Expectations for data quality and GitHub Actions for automated testing and container builds. | Pytest and validation suite, CI/CD pipelines. |
+| **Analytics & Visualization** | Design SQL queries and regression models for insights. Build a Streamlit dashboard showcasing KPIs and analysis outcomes. | Analytical notebooks, queries, Streamlit dashboard. |
+| **Documentation & Version Control** | Maintain clear documentation, environment reproducibility, and version control discipline. Ensure alignment with the project rubric and reproducibility. | README, environment files, Quarto/Overleaf documentation. |
+
+**Collaboration Model**
+- **Twice-weekly commits** aligned with project “drop” plan.  
+- **Feature-branch workflow** with code reviews and pull requests before merge.  
+- Shared GitHub repository for all code, documentation, and pipeline assets.  
+- Inline commenting and task tracking via GitHub
+
+
 ## 🏁 References
 - [Olist E-Commerce Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)  
 - [AWS Free Tier Services](https://aws.amazon.com/free/)  
