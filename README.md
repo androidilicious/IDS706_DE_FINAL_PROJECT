@@ -58,83 +58,79 @@ This pipeline enables:
 
 ### High-Level System Design
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        DATA SOURCES                              │
-├─────────────────────────────────────────────────────────────────┤
-│  Kaggle API (olistbr/brazilian-ecommerce)                        │
-│  - 9 CSV files, ~120 MB compressed                               │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    INGESTION LAYER                               │
-├─────────────────────────────────────────────────────────────────┤
-│  Python Scripts:                                                 │
-│  ✓ download_from_kaggle.py  - Extract from Kaggle               │
-│  ✓ upload_to_s3.py          - Load to cloud storage             │
-│  ✓ create_schema.py         - DDL management                    │
-│  ✓ s3_to_rds.py             - Bulk loader with FK handling      │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   STORAGE LAYER                                  │
-├─────────────────────────────────────────────────────────────────┤
-│  AWS S3 (Raw Zone):         PostgreSQL (Data Warehouse):         │
-│  - Bucket: de-27-team3      - Host: Aiven Cloud                 │
-│  - Prefix: raw/             - 9 tables, 1.5M+ rows              │
-│  - Region: us-east-2        - Foreign keys enforced             │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                TRANSFORMATION LAYER                              │
-├─────────────────────────────────────────────────────────────────┤
-│  Polars (Fast DataFrames):                                       │
-│  ✓ Revenue aggregation by state                                 │
-│  ✓ Delivery performance analysis                                │
-│  ✓ Linear regression: Review score ~ Delivery time              │
-│  ✓ Product category performance metrics                         │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    ANALYTICS LAYER                               │
-├─────────────────────────────────────────────────────────────────┤
-│  SQL Queries (10+ business queries):                             │
-│  ✓ Monthly revenue trends                                       │
-│  ✓ Top sellers and products                                     │
-│  ✓ Customer segmentation                                        │
-│  ✓ Late delivery impact on reviews                              │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   ORCHESTRATION                                  │
-├─────────────────────────────────────────────────────────────────┤
-│  Apache Airflow DAG:                                             │
-│  ✓ Task dependencies                                            │
-│  ✓ Retry logic & SLA monitoring                                 │
-│  ✓ Email alerts on failure                                      │
-│  ✓ Scheduled daily runs                                         │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        A[Kaggle API<br/>Brazilian E-Commerce<br/>9 CSV files, 120 MB]
+    end
+    
+    subgraph "Ingestion Layer"
+        B[download_from_kaggle.py]
+        C[upload_to_s3.py]
+        D[create_schema.py]
+        E[s3_to_rds.py]
+    end
+    
+    subgraph "Storage Layer"
+        F[AWS S3<br/>Bucket: de-27-team3<br/>Raw Zone]
+        G[PostgreSQL<br/>Aiven Cloud<br/>1.5M+ rows, 9 tables]
+    end
+    
+    subgraph "Transformation Layer"
+        H[Polars Analysis<br/>Revenue by State<br/>Delivery Performance<br/>Regression Models]
+    end
+    
+    subgraph "Analytics Layer"
+        I[SQL Queries<br/>10+ Business Reports<br/>Revenue Trends<br/>Customer Insights]
+        J[Streamlit Dashboard<br/>Interactive Visualizations<br/>Real-time Analytics]
+    end
+    
+    subgraph "Orchestration"
+        K[Apache Airflow<br/>Task Dependencies<br/>Scheduling & Monitoring]
+    end
+    
+    A -->|Download| B
+    B -->|Upload| C
+    C --> F
+    F -->|Schema| D
+    D --> G
+    F -->|Load Data| E
+    E --> G
+    G -->|Transform| H
+    H -->|Output CSV| G
+    G -->|Query| I
+    G -->|Real-time Query| J
+    K -->|Orchestrate| B
+    K -->|Orchestrate| C
+    K -->|Orchestrate| D
+    K -->|Orchestrate| E
+    K -->|Orchestrate| H
+    
+    style A fill:#e1f5ff
+    style F fill:#fff4e1
+    style G fill:#ffe1f5
+    style J fill:#e1ffe1
+    style K fill:#f0e1ff
 ```
 
-### Component Diagram
+### Data Flow Architecture
 
-```
-┌─────────────┐     ┌─────────────┐     ┌──────────────┐
-│   Kaggle    │────▶│   AWS S3    │────▶│  PostgreSQL  │
-│   Dataset   │     │  (Raw Zone) │     │   (Aiven)    │
-└─────────────┘     └─────────────┘     └──────────────┘
-       │                    │                    │
-       ▼                    ▼                    ▼
-┌─────────────┐     ┌─────────────┐     ┌──────────────┐
-│  download_  │     │  upload_    │     │  s3_to_rds   │
-│  from_      │     │  to_s3      │     │              │
-│  kaggle.py  │     │  .py        │     │  .py         │
-└─────────────┘     └─────────────┘     └──────────────┘
+```mermaid
+flowchart LR
+    A[Kaggle Dataset] -->|Extract| B[Local CSV Files]
+    B -->|Upload| C[AWS S3<br/>Raw Zone]
+    C -->|Load| D[PostgreSQL<br/>Data Warehouse]
+    D -->|Transform| E[Polars Analytics]
+    E -->|Results| F[Output Files]
+    D -->|Query| G[Business Intelligence]
+    D -->|Real-time| H[Web Dashboard]
+    I[Apache Airflow] -.->|Orchestrate| A
+    I -.->|Schedule| E
+    I -.->|Monitor| G
+    
+    style C fill:#ff9
+    style D fill:#9f9
+    style H fill:#99f
 ```
 
 ---
@@ -171,43 +167,123 @@ This pipeline enables:
 
 #### Entity-Relationship Model
 
+```mermaid
+erDiagram
+    customers_raw ||--o{ orders_raw : places
+    orders_raw ||--o{ order_items_raw : contains
+    orders_raw ||--o{ order_payments_raw : "paid by"
+    orders_raw ||--o{ order_reviews_raw : "reviewed in"
+    products_raw ||--o{ order_items_raw : "ordered as"
+    sellers_raw ||--o{ order_items_raw : "sold by"
+    product_category_name_translation_raw ||--o{ products_raw : translates
+    
+    customers_raw {
+        string customer_id PK
+        string customer_unique_id
+        string customer_zip_code_prefix
+        string customer_city
+        string customer_state
+    }
+    
+    orders_raw {
+        string order_id PK
+        string customer_id FK
+        timestamp order_purchase_timestamp
+        timestamp order_delivered_customer_date
+        string order_status
+    }
+    
+    order_items_raw {
+        int order_item_id PK
+        string order_id FK
+        string product_id FK
+        string seller_id FK
+        float price
+        float freight_value
+    }
+    
+    order_payments_raw {
+        int payment_sequential PK
+        string order_id FK
+        string payment_type
+        int payment_installments
+        float payment_value
+    }
+    
+    order_reviews_raw {
+        string review_id PK
+        string order_id FK
+        int review_score
+        timestamp review_creation_date
+    }
+    
+    products_raw {
+        string product_id PK
+        string product_category_name FK
+        float product_weight_g
+        float product_length_cm
+    }
+    
+    sellers_raw {
+        string seller_id PK
+        string seller_zip_code_prefix
+        string seller_city
+        string seller_state
+    }
+    
+    geolocation_raw {
+        string geolocation_zip_code_prefix
+        float geolocation_lat
+        float geolocation_lng
+        string geolocation_city
+        string geolocation_state
+    }
+    
+    product_category_name_translation_raw {
+        string product_category_name PK
+        string product_category_name_english
+    }
 ```
-customers_raw (99,441 rows)
-    customer_id (PK)
-    │
-    ├──▶ orders_raw (99,441 rows)
-    │       order_id (PK)
-    │       customer_id (FK)
-    │       │
-    │       ├──▶ order_items_raw (112,650 rows)
-    │       │       order_item_id (PK)
-    │       │       order_id (FK)
-    │       │       product_id (FK)
-    │       │       seller_id (FK)
-    │       │
-    │       ├──▶ order_payments_raw (103,886 rows)
-    │       │       payment_id (PK)
-    │       │       order_id (FK)
-    │       │
-    │       └──▶ order_reviews_raw (99,224 rows)
-    │               review_id (PK)
-    │               order_id (FK)
-    │
-products_raw (32,951 rows)
-    product_id (PK)
-    product_category_name (FK)
 
-sellers_raw (3,095 rows)
-    seller_id (PK)
-
-geolocation_raw (1,000,163 rows)
-    geolocation_zip_code_prefix (Indexed)
-
-product_category_name_translation_raw (71 rows)
-    product_category_name (PK)
-```
+![PostgreSQL Schema](screenshots/schema-postgres.png)
+*PostgreSQL database schema showing all 9 tables with 1.5M+ rows*
 
 #### Load Order (Critical for Foreign Keys)
+
+```mermaid
+graph TD
+    subgraph "Stage 1: Independent Tables"
+        A[customers_raw<br/>99,441 rows]
+        B[sellers_raw<br/>3,095 rows]
+        C[products_raw<br/>32,951 rows]
+        D[geolocation_raw<br/>1M+ rows]
+        E[product_category_name_translation_raw<br/>71 rows]
+    end
+    
+    subgraph "Stage 2: Orders"
+        F[orders_raw<br/>99,441 rows]
+    end
+    
+    subgraph "Stage 3: Order Details"
+        G[order_items_raw<br/>112,650 rows]
+        H[order_payments_raw<br/>103,886 rows]
+        I[order_reviews_raw<br/>99,224 rows]
+    end
+    
+    A -->|FK: customer_id| F
+    F -->|FK: order_id| G
+    F -->|FK: order_id| H
+    F -->|FK: order_id| I
+    C -->|FK: product_id| G
+    B -->|FK: seller_id| G
+    E -->|FK: category_name| C
+    
+    style A fill:#e1f5ff
+    style F fill:#ffe1e1
+    style G fill:#e1ffe1
+    style H fill:#ffe1f5
+    style I fill:#fff4e1
+```
 
 ```python
 LOAD_ORDER = [
@@ -227,6 +303,9 @@ LOAD_ORDER = [
     "order_reviews_raw",
 ]
 ```
+
+![S3 Data Load](screenshots/s3-load.png)
+*AWS S3 bucket showing raw CSV files uploaded from Kaggle dataset*
 
 **Documentation**: See [`ingestion/schema_raw.sql`](ingestion/schema_raw.sql) for complete DDL.
 
@@ -310,20 +389,29 @@ LOAD_ORDER = [
 - ⏱️ SLA monitoring
 
 **Task Graph**:
-```
-download_from_kaggle
-    ↓
-upload_to_s3
-    ↓
-create_schema
-    ↓
-load_to_postgres
-    ↓
-run_transformations
-    ↓
-data_quality_tests
-    ↓
-generate_report
+
+```mermaid
+graph TD
+    A[download_from_kaggle] -->|Success| B[upload_to_s3]
+    B -->|S3 Upload Complete| C[create_schema]
+    C -->|Schema Ready| D[load_to_postgres]
+    D -->|Data Loaded| E[run_transformations]
+    E -->|Transform Complete| F[data_quality_tests]
+    F -->|Tests Pass| G[generate_report]
+    
+    A -.->|Retry 2x| A
+    B -.->|Retry 2x| B
+    D -.->|Retry 2x| D
+    
+    F -.->|Email Alert| H[Notify Team]
+    G -.->|Success Email| H
+    
+    style A fill:#e1f5ff
+    style D fill:#ffe1e1
+    style E fill:#e1ffe1
+    style F fill:#fff4e1
+    style G fill:#e1ffe1
+    style H fill:#ffe1f5
 ```
 
 ### 5. Testing
@@ -352,16 +440,69 @@ pytest tests/ -v --cov=ingestion
 
 **Files**: `Dockerfile`, `docker-compose.yml`
 
+**Docker Services Architecture**:
+
+```mermaid
+graph LR
+    subgraph "Docker Compose Services"
+        A[olist-pipeline<br/>ETL Processing]
+        B[olist-dashboard<br/>Streamlit:8501]
+        C[olist-postgres-test<br/>PostgreSQL:5433]
+        D[olist-airflow-webserver<br/>Airflow UI:8080]
+        E[olist-airflow-scheduler<br/>Task Execution]
+        F[olist-airflow-postgres<br/>Metadata DB]
+    end
+    
+    G[olist-network<br/>Docker Network]
+    
+    A -.->|Network| G
+    B -.->|Network| G
+    C -.->|Network| G
+    D -.->|Network| G
+    E -.->|Network| G
+    F -.->|Network| G
+    
+    E -->|Executes| A
+    D -->|Metadata| F
+    E -->|Metadata| F
+    B -->|Query| C
+    
+    style A fill:#e1f5ff
+    style B fill:#e1ffe1
+    style C fill:#ffe1e1
+    style D fill:#fff4e1
+    style E fill:#ffe1f5
+    style G fill:#f0f0f0
+```
+
 **Services**:
 - `pipeline`: Main ETL service
-- `postgres-test`: Local PostgreSQL for testing
-- `airflow-webserver`: Orchestration UI
-- `airflow-scheduler`: Task execution
-- `test`: Test runner
+- `dashboard`: Streamlit web application (port 8501)
+- `postgres-test`: Local PostgreSQL for testing (port 5433)
+- `airflow-webserver`: Orchestration UI (port 8080)
+- `airflow-scheduler`: Task execution engine
+- `airflow-postgres`: Airflow metadata database
+- `test`: Automated test runner
+
+![Docker GUI](screenshots/docker-gui.png)
+*Docker Desktop showing all running containers*
+
+![Docker Terminal](screenshots/docker-run-terminal.png)
+*Terminal output showing successful Docker container deployment*
 
 **Run with Docker**:
 ```bash
-docker-compose up --build
+# Start all services
+docker-compose up -d
+
+# Start specific service
+docker-compose up -d dashboard
+
+# View logs
+docker logs -f olist-pipeline
+
+# Stop all services
+docker-compose down
 ```
 
 ### 7. Web Dashboard
@@ -398,12 +539,50 @@ docker-compose up -d dashboard
 
 **File**: `.github/workflows/ci-cd.yml`
 
+**CI/CD Pipeline Architecture**:
+
+```mermaid
+graph LR
+    A[Git Push] -->|Trigger| B[GitHub Actions]
+    
+    subgraph "CI/CD Pipeline"
+        B --> C[Lint Job]
+        C -->|flake8| C1[Style Check]
+        C -->|black| C2[Format Check]
+        
+        C1 & C2 --> D[Test Job]
+        D --> D1[Setup PostgreSQL]
+        D --> D2[Run pytest]
+        D --> D3[Coverage Report]
+        
+        D1 & D2 & D3 --> E[Security Job]
+        E --> E1[Trivy Scan]
+        E1 --> E2[Upload SARIF]
+        
+        E --> F[Build Job]
+        F --> F1[Docker Build]
+        F1 --> F2[Push to Registry]
+        
+        F --> G[Deploy Job]
+        G --> G1[Notify Success]
+    end
+    
+    G1 --> H[Production Ready]
+    
+    style C fill:#e1f5ff
+    style D fill:#ffe1e1
+    style E fill:#fff4e1
+    style F fill:#e1ffe1
+    style G fill:#ffe1f5
+    style H fill:#90EE90
+```
+
 **Pipeline Stages**:
 1. **Lint**: flake8, black formatting
-2. **Test**: pytest with coverage
-3. **Security**: Trivy vulnerability scan
-4. **Build**: Docker image build & push
-5. **Deploy**: Production deployment (main branch)
+2. **Test**: pytest with coverage, PostgreSQL service
+3. **Security**: Trivy vulnerability scan, CodeQL analysis
+4. **Build**: Docker image build & push (optional)
+5. **Deploy**: Production deployment notification (main branch)
 
 **Automated on**:
 - Push to `main` or `develop`
@@ -547,6 +726,38 @@ docker logs -f olist-dashboard
 docker-compose stop dashboard
 ```
 
+**Dashboard Architecture**:
+
+```mermaid
+graph TD
+    A[User Browser] -->|HTTP Request| B[Streamlit App<br/>Port 8501]
+    B -->|SQL Query| C[PostgreSQL<br/>Aiven Cloud]
+    C -->|Result Set| B
+    B -->|Render| D[Plotly Charts]
+    B -->|Cache| E[st.cache_data<br/>10 min TTL]
+    
+    subgraph "Dashboard Pages"
+        F[📈 Overview<br/>KPIs & Trends]
+        G[🌍 Geographic<br/>Maps & States]
+        H[📦 Products<br/>Categories & Ratings]
+        I[🚚 Delivery<br/>Performance Analysis]
+        J[📊 Statistics<br/>Regression Models]
+        K[✅ Quality<br/>Data Validation]
+    end
+    
+    B --> F
+    B --> G
+    B --> H
+    B --> I
+    B --> J
+    B --> K
+    
+    style B fill:#e1ffe1
+    style C fill:#ffe1e1
+    style D fill:#e1f5ff
+    style E fill:#fff4e1
+```
+
 **Dashboard Features**:
 - 📈 **Overview**: KPIs, revenue trends, top categories/states
 - 🌍 **Geographic Analysis**: Interactive maps, city insights
@@ -583,6 +794,34 @@ psql -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME>
 
 ## 🧪 Testing
 
+### Testing Strategy
+
+```mermaid
+graph TD
+    A[Testing Suite] --> B[Unit Tests]
+    A --> C[Integration Tests]
+    A --> D[Data Quality Tests]
+    
+    B --> B1[Connection Tests<br/>S3 & PostgreSQL]
+    B --> B2[Schema Tests<br/>Table Validation]
+    B --> B3[Data Load Tests<br/>Function Testing]
+    
+    C --> C1[End-to-End Pipeline<br/>Kaggle → PostgreSQL]
+    C --> C2[Docker Services<br/>Container Health]
+    
+    D --> D1[Row Count Validation]
+    D --> D2[NULL Value Checks]
+    D --> D3[Foreign Key Integrity]
+    D --> D4[Data Range Validation]
+    D --> D5[Duplicate Detection]
+    D --> D6[Date Consistency]
+    
+    style A fill:#e1f5ff
+    style B fill:#ffe1e1
+    style C fill:#e1ffe1
+    style D fill:#fff4e1
+```
+
 ### Run All Tests
 
 ```bash
@@ -615,6 +854,30 @@ python tests/test_data_quality.py
 ## 🌊 Undercurrents of Data Engineering
 
 ### 1. Scalability
+
+```mermaid
+graph LR
+    subgraph "Horizontal Scaling"
+        A[S3<br/>Unlimited Storage]
+        B[PostgreSQL<br/>Read Replicas]
+        C[Docker<br/>Multiple Containers]
+    end
+    
+    subgraph "Vertical Scaling"
+        D[Polars<br/>Lazy Evaluation]
+        E[Chunked Processing<br/>Memory Efficient]
+        F[Aiven Cloud<br/>64 vCPU, 512 GB]
+    end
+    
+    G[1.5M+ Rows] --> A
+    G --> B
+    G --> D
+    G --> E
+    
+    style A fill:#e1f5ff
+    style D fill:#ffe1e1
+    style F fill:#e1ffe1
+```
 
 **Implementation**:
 - **Horizontal**: S3 can store unlimited data, PostgreSQL read replicas
@@ -678,6 +941,29 @@ docker run olist-pipeline --env-file .env.prod
 
 ### 4. Observability
 
+```mermaid
+graph TD
+    A[Data Pipeline] --> B[Logging System]
+    A --> C[Metrics Collection]
+    A --> D[Monitoring Tools]
+    
+    B --> B1[Structured Logs<br/>Timestamps & Levels]
+    B --> B2[Progress Tracking<br/>Row Counts]
+    
+    C --> C1[Load Metrics<br/>Rows/Second]
+    C --> C2[Data Quality Scores<br/>Pass/Fail Rates]
+    
+    D --> D1[Airflow UI<br/>Task Status & SLA]
+    D --> D2[GitHub Actions<br/>CI/CD Status]
+    D --> D3[PostgreSQL Logs<br/>Query Performance]
+    D --> D4[Docker Logs<br/>Container Health]
+    
+    style A fill:#e1f5ff
+    style B fill:#ffe1e1
+    style C fill:#e1ffe1
+    style D fill:#fff4e1
+```
+
 **Implementation**:
 - Detailed logging with timestamps
 - Progress bars for long operations
@@ -698,6 +984,7 @@ print(f"⚠ Skipped: {skipped_rows:,} duplicates")
 - Airflow UI: Task status, logs, SLA monitoring
 - PostgreSQL logs: Query performance
 - GitHub Actions: CI/CD pipeline status
+- Docker logs: Container health checks
 - Prometheus (optional): Custom metrics
 
 ### 5. Data Governance
