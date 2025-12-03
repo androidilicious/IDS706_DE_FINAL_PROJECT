@@ -33,26 +33,57 @@ st.markdown("""
 <style>
     /* Mobile responsiveness */
     @media (max-width: 768px) {
+        /* Reduce title sizes */
+        h1 {
+            font-size: 1.5rem !important;
+            line-height: 1.2 !important;
+        }
+        h2 {
+            font-size: 1.2rem !important;
+            line-height: 1.2 !important;
+        }
+        h3 {
+            font-size: 1rem !important;
+            line-height: 1.2 !important;
+        }
+        
+        /* Container padding */
         .css-18e3th9 {
-            padding: 1rem 0.5rem;
+            padding: 0.5rem 0.5rem;
         }
         .css-1d391kg {
-            padding: 1rem 0.5rem;
+            padding: 0.5rem 0.5rem;
         }
+        .block-container {
+            padding: 1rem 0.5rem !important;
+        }
+        
+        /* Metrics */
         [data-testid="stMetricValue"] {
-            font-size: 1.2rem;
+            font-size: 1rem !important;
         }
         [data-testid="stMetricLabel"] {
-            font-size: 0.8rem;
+            font-size: 0.7rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+        
+        /* Charts */
         .stPlotlyChart {
             height: 300px !important;
+        }
+        
+        /* Prevent text overflow */
+        .markdown-text-container {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
     }
     
     /* Better spacing for all screens */
     .main {
-        padding: 1rem;
+        padding: 1rem 0.5rem;
     }
     
     /* Responsive charts */
@@ -65,6 +96,9 @@ st.markdown("""
         [data-testid="stSidebar"] {
             width: 100%;
         }
+        [data-testid="stSidebarNav"] {
+            font-size: 0.9rem;
+        }
     }
     
     /* Responsive columns */
@@ -72,13 +106,25 @@ st.markdown("""
         [data-testid="column"] {
             width: 100% !important;
             flex: 100% !important;
+            min-width: 100% !important;
         }
     }
     
     /* Improve table readability on mobile */
     @media (max-width: 768px) {
         .dataframe {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+        }
+        .dataframe th, .dataframe td {
+            padding: 0.25rem !important;
+        }
+    }
+    
+    /* Info boxes */
+    @media (max-width: 768px) {
+        .stAlert, .stInfo, .stSuccess, .stWarning, .stError {
+            font-size: 0.85rem;
+            padding: 0.5rem !important;
         }
     }
 </style>
