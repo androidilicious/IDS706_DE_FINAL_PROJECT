@@ -15,7 +15,7 @@
 
 ### 🎥 Project Demo Video
 
-[![Watch Demo Video](https://img.shields.io/badge/▶️_Watch-Demo_Video-red?style=for-the-badge)](<video controls src="https://github.com/androidilicious/IDS706_DE_FINAL_PROJECT/raw/refs/heads/main/screenshots/Olist_E-Commerce_Pipeline.mp4" title="screenshots/Olist_E-Commerce_Pipeline.mp4"></video>)
+[![Watch Demo Video](https://img.shields.io/badge/▶️_Watch-Demo_Video-red?style=for-the-badge)](https://github.com/androidilicious/IDS706_DE_FINAL_PROJECT/raw/refs/heads/main/screenshots/Olist_E-Commerce_Pipeline.mp4)
 
 **[📥 Download Video](screenshots/Olist_E-Commerce_Pipeline.mp4)** | Full walkthrough of the data pipeline, dashboard, and key features
 
