@@ -23,6 +23,10 @@ kaggle>=1.6.0                   # Kaggle API client
 # Configuration
 python-dotenv>=1.0.0            # Environment variable management
 
+# Web Dashboard (Streamlit Cloud)
+streamlit>=1.29.0               # Dashboard framework
+plotly>=5.18.0                  # Interactive visualizations
+
 # Orchestration
 apache-airflow>=2.7.0           # Workflow orchestration (optional)
 
