@@ -25,33 +25,114 @@ st.set_page_config(
     page_title="Olist E-Commerce Analytics",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"
 )
+
+# Mobile-responsive CSS
+st.markdown("""
+<style>
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .css-18e3th9 {
+            padding: 1rem 0.5rem;
+        }
+        .css-1d391kg {
+            padding: 1rem 0.5rem;
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 1.2rem;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.8rem;
+        }
+        .stPlotlyChart {
+            height: 300px !important;
+        }
+    }
+    
+    /* Better spacing for all screens */
+    .main {
+        padding: 1rem;
+    }
+    
+    /* Responsive charts */
+    .js-plotly-plot {
+        width: 100% !important;
+    }
+    
+    /* Better sidebar on mobile */
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"] {
+            width: 100%;
+        }
+    }
+    
+    /* Responsive columns */
+    @media (max-width: 768px) {
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 100% !important;
+        }
+    }
+    
+    /* Improve table readability on mobile */
+    @media (max-width: 768px) {
+        .dataframe {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Database connection
 @st.cache_resource
 def get_connection():
     """Create cached database connection."""
-    # Use Streamlit secrets when deployed
-    if hasattr(st, 'secrets') and 'DB_HOST' in st.secrets:
-        return psycopg2.connect(
-            host=st.secrets['DB_HOST'],
-            port=int(st.secrets.get('DB_PORT', 22446)),
-            dbname=st.secrets['DB_NAME'],
-            user=st.secrets['DB_USER'],
-            password=st.secrets['DB_PASSWORD'],
-            sslmode='require'
-        )
-    # Fall back to environment variables for local
-    else:
-        return psycopg2.connect(
-            host=os.getenv('DB_HOST'),
-            port=int(os.getenv('DB_PORT', 22446)),
-            dbname=os.getenv('DB_NAME'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
-            sslmode=os.getenv('DB_SSLMODE', 'require')
-        )
+    try:
+        # Use Streamlit secrets when deployed
+        if hasattr(st, 'secrets') and 'DB_HOST' in st.secrets:
+            return psycopg2.connect(
+                host=st.secrets['DB_HOST'],
+                port=int(st.secrets.get('DB_PORT', 22446)),
+                dbname=st.secrets['DB_NAME'],
+                user=st.secrets['DB_USER'],
+                password=st.secrets['DB_PASSWORD'],
+                sslmode='require'
+            )
+        # Fall back to environment variables for local
+        else:
+            return psycopg2.connect(
+                host=os.getenv('DB_HOST'),
+                port=int(os.getenv('DB_PORT', 22446)),
+                dbname=os.getenv('DB_NAME'),
+                user=os.getenv('DB_USER'),
+                password=os.getenv('DB_PASSWORD'),
+                sslmode=os.getenv('DB_SSLMODE', 'require')
+            )
+    except Exception as e:
+        st.error("""
+        ### ⚠️ Database Connection Error
+        
+        **Unable to connect to the database.** Please configure your database secrets in Streamlit Cloud:
+        
+        1. Go to **"Manage app"** (bottom right)
+        2. Click **"Settings"** → **"Secrets"**
+        3. Add the following in TOML format:
+        
+        ```toml
+        DB_HOST = "your-postgres-host.aivencloud.com"
+        DB_PORT = "22446"
+        DB_NAME = "defaultdb"
+        DB_USER = "avnadmin"
+        DB_PASSWORD = "your-password-here"
+        ```
+        
+        4. Save and reboot the app
+        
+        **Note**: Contact the project team for database credentials if you don't have them.
+        """)
+        st.stop()
+        return None
 
 @st.cache_data(ttl=600)  # Cache for 10 minutes
 def run_query(query):
@@ -128,12 +209,13 @@ if page == "📈 Overview":
         xaxis_title="Month",
         yaxis_title="Revenue (R$)",
         height=400,
-        hovermode='x unified'
+        hovermode='x unified',
+        margin=dict(l=20, r=20, t=40, b=20)
     )
     st.plotly_chart(fig_revenue, use_container_width=True)
     
     # Top Products and States
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1], gap="medium")
     
     with col1:
         st.subheader("🏆 Top 10 Product Categories")
@@ -160,7 +242,7 @@ if page == "📈 Overview":
             color='revenue',
             color_continuous_scale='Blues'
         )
-        fig_cat.update_layout(height=400, showlegend=False)
+        fig_cat.update_layout(height=400, showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
         st.plotly_chart(fig_cat, use_container_width=True)
     
     with col2:
@@ -187,7 +269,7 @@ if page == "📈 Overview":
             color='revenue',
             color_continuous_scale='Greens'
         )
-        fig_states.update_layout(height=400, showlegend=False)
+        fig_states.update_layout(height=400, showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
         st.plotly_chart(fig_states, use_container_width=True)
 
 # ===== PAGE 2: GEOGRAPHIC ANALYSIS =====
@@ -277,20 +359,20 @@ elif page == "📦 Product Insights":
         color_continuous_scale='Plasma',
         labels={'avg_price': 'Average Price (R$)', 'avg_review': 'Avg Review Score'}
     )
-    fig_scatter.update_layout(height=500)
+    fig_scatter.update_layout(height=500, margin=dict(l=20, r=20, t=40, b=20))
     st.plotly_chart(fig_scatter, use_container_width=True)
     
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1], gap="medium")
     
     with col1:
         st.subheader("⭐ Best Rated Categories")
         best_rated = category_data.nlargest(10, 'avg_review')[['category', 'avg_review', 'orders']]
-        st.dataframe(best_rated.style.format({'avg_review': '{:.2f}', 'orders': '{:,}'}), use_container_width=True)
+        st.dataframe(best_rated.style.format({'avg_review': '{:.2f}', 'orders': '{:,}'}), use_container_width=True, height=400)
     
     with col2:
         st.subheader("💎 Most Expensive Categories")
         most_expensive = category_data.nlargest(10, 'avg_price')[['category', 'avg_price', 'orders']]
-        st.dataframe(most_expensive.style.format({'avg_price': 'R$ {:,.2f}', 'orders': '{:,}'}), use_container_width=True)
+        st.dataframe(most_expensive.style.format({'avg_price': 'R$ {:,.2f}', 'orders': '{:,}'}), use_container_width=True, height=400)
 
 # ===== PAGE 4: DELIVERY PERFORMANCE =====
 elif page == "🚚 Delivery Performance":
@@ -340,7 +422,7 @@ elif page == "🚚 Delivery Performance":
         GROUP BY delivery_status
     """)
     
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1], gap="medium")
     
     with col1:
         fig_late = px.bar(
@@ -351,6 +433,7 @@ elif page == "🚚 Delivery Performance":
             title="Review Score: On Time vs Late",
             color_discrete_map={'On Time': 'green', 'Late': 'red'}
         )
+        fig_late.update_layout(height=350)
         st.plotly_chart(fig_late, use_container_width=True)
     
     with col2:
@@ -362,6 +445,7 @@ elif page == "🚚 Delivery Performance":
             color='delivery_status',
             color_discrete_map={'On Time': 'green', 'Late': 'red'}
         )
+        fig_count.update_layout(height=350)
         st.plotly_chart(fig_count, use_container_width=True)
 
 # ===== PAGE 5: STATISTICAL ANALYSIS =====
@@ -431,7 +515,8 @@ elif page == "📊 Statistical Analysis":
         title="Review Score vs Delivery Time",
         xaxis_title="Delivery Time (days)",
         yaxis_title="Review Score (1-5)",
-        height=500
+        height=500,
+        margin=dict(l=20, r=20, t=40, b=20)
     )
     st.plotly_chart(fig_reg, use_container_width=True)
 
@@ -457,7 +542,7 @@ elif page == "✅ Data Quality":
     
     st.subheader("🔍 Data Quality Checks")
     
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1], gap="medium")
     
     with col1:
         st.markdown("**NULL Value Checks**")
