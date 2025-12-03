@@ -9,6 +9,12 @@
 
 🌐 **[Live Dashboard](https://dataplumbers.streamlit.app)** - Interactive analytics and visualizations
 
+---
+
+![Project Infographic](screenshots/infographic.png)
+
+---
+
 ## 📋 Table of Contents
 
 - [Project Overview](#project-overview)
