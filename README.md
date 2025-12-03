@@ -5,6 +5,15 @@
 [![CI/CD](https://github.com/PinakiG-duke/IDS706_DE_FINAL_PROJECT/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/PinakiG-duke/IDS706_DE_FINAL_PROJECT/actions)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Streamlit App](https://img.shields.io/badge/Streamlit-Live_Dashboard-FF4B4B?logo=streamlit)](https://dataplumbers.streamlit.app)
+
+🌐 **[Live Dashboard](https://dataplumbers.streamlit.app)** - Interactive analytics and visualizations
+
+---
+
+![Project Infographic](screenshots/infographic.png)
+
+---
 
 ## 📋 Table of Contents
 
@@ -528,8 +537,12 @@ docker-compose down
 - Port: 8501
 
 **Quick Start**:
+
+🌐 **Live Dashboard**: [https://dataplumbers.streamlit.app](https://dataplumbers.streamlit.app)
+
+**Local Development**:
 ```bash
-# Start dashboard
+# Start dashboard locally
 docker-compose up -d dashboard
 
 # Access at http://localhost:8501
@@ -713,8 +726,13 @@ python tests/test_data_quality.py
 
 ### Run Web Dashboard 🌐
 
+🌐 **Live Dashboard**: [https://dataplumbers.streamlit.app](https://dataplumbers.streamlit.app)
+
+Interactive analytics dashboard with real-time PostgreSQL queries, featuring 6 pages of visualizations and insights.
+
+**Local Development**:
 ```bash
-# Start dashboard
+# Start dashboard locally
 docker-compose up -d dashboard
 
 # Access at: http://localhost:8501
