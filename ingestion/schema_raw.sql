@@ -29,13 +29,13 @@ CREATE TABLE IF NOT EXISTS sellers_raw (
 CREATE TABLE IF NOT EXISTS products_raw (
     product_id                  VARCHAR(50) PRIMARY KEY,
     product_category_name       VARCHAR(100),
-    product_name_lenght         INTEGER,
-    product_description_lenght  INTEGER,
-    product_photos_qty          INTEGER,
-    product_weight_g            INTEGER,
-    product_length_cm           INTEGER,
-    product_height_cm           INTEGER,
-    product_width_cm            INTEGER
+    product_name_lenght         DOUBLE PRECISION,
+    product_description_lenght  DOUBLE PRECISION,
+    product_photos_qty          DOUBLE PRECISION,
+    product_weight_g            DOUBLE PRECISION,
+    product_length_cm           DOUBLE PRECISION,
+    product_height_cm           DOUBLE PRECISION,
+    product_width_cm            DOUBLE PRECISION
 );
 
 -- 5. product_category_name_translation.csv

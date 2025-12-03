@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # Main pipeline service
+  pipeline:
+    build:
+      context: .
+      target: production
+    container_name: olist-pipeline
+    env_file:
+      - .env
+    volumes:
+      - ./ingestion:/app/ingestion
+      - ./transformation:/app/transformation
+      - ./logs:/app/logs
+      - ./.kaggle:/root/.kaggle:ro
+    networks:
+      - olist-network
+    depends_on:
+      - postgres-test
+    command: python ingestion/ingestion_pipeline.py
+
+  # Local PostgreSQL for testing (optional)
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: olist-postgres-test
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./ingestion/schema_raw.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - olist-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Airflow webserver (optional - for orchestration)
+  airflow-webserver:
+    image: apache/airflow:2.7.3
+    container_name: olist-airflow-webserver
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./orchestration:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+    ports:
+      - "8080:8080"
+    networks:
+      - olist-network
+    depends_on:
+      - airflow-postgres
+    command: webserver
+
+  # Airflow scheduler
+  airflow-scheduler:
+    image: apache/airflow:2.7.3
+    container_name: olist-airflow-scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    volumes:
+      - ./orchestration:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+    networks:
+      - olist-network
+    depends_on:
+      - airflow-postgres
+    command: scheduler
+
+  # PostgreSQL for Airflow metadata
+  airflow-postgres:
+    image: postgres:15-alpine
+    container_name: olist-airflow-postgres
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    volumes:
+      - airflow-db:/var/lib/postgresql/data
+    networks:
+      - olist-network
+
+  # Test runner
+  test:
+    build:
+      context: .
+      target: test
+    container_name: olist-tests
+    env_file:
+      - .env
+    volumes:
+      - ./tests:/app/tests
+      - ./ingestion:/app/ingestion
+    networks:
+      - olist-network
+    command: pytest tests/ -v
+
+  # Streamlit Dashboard
+  dashboard:
+    image: olist-dashboard:latest
+    container_name: olist-dashboard
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    networks:
+      - olist-network
+    restart: unless-stopped
+
+networks:
+  olist-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  airflow-db:
