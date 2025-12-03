@@ -46,3 +46,7 @@ Thumbs.db
 
 # Kaggle credentials
 .kaggle/
+
+# Logs
+logs/
+*.log

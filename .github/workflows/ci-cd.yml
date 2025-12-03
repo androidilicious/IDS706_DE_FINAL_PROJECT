@@ -82,6 +82,7 @@ jobs:
           echo "DB_NAME=testdb" >> .env
           echo "DB_USER=testuser" >> .env
           echo "DB_PASSWORD=testpass" >> .env
+          echo "DB_SSLMODE=disable" >> .env
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "S3_BUCKET=de-27-team3" >> .env

@@ -1,7 +1,7 @@
 # Olist E-Commerce Data Pipeline
 # Multi-stage Docker image for production deployment
 
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -34,16 +34,16 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Development stage
-FROM base as development
+FROM base AS development
 RUN pip install --no-cache-dir pytest pytest-cov black flake8
 CMD ["python", "ingestion/test_connections.py"]
 
 # Production stage
-FROM base as production
+FROM base AS production
 CMD ["python", "ingestion/ingestion_pipeline.py"]
 
 # Test stage
-FROM base as test
+FROM base AS test
 RUN pip install --no-cache-dir pytest pytest-cov
 COPY tests/ ./tests/
 CMD ["pytest", "tests/", "-v", "--cov=ingestion"]
