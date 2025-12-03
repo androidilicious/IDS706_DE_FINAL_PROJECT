@@ -87,13 +87,15 @@ def test_postgres_connection():
 
     try:
         print(f"\nConnecting to {DB_HOST}:{DB_PORT}/{DB_NAME}...")
+        # Use sslmode=prefer for test environments, require for production
+        sslmode = os.getenv("DB_SSLMODE", "prefer")
         conn = psycopg2.connect(
             host=DB_HOST,
             port=DB_PORT,
             dbname=DB_NAME,
             user=DB_USER,
             password=DB_PASSWORD,
-            sslmode="require",
+            sslmode=sslmode,
         )
 
         # Test query

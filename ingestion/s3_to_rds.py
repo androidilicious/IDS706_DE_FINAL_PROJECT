@@ -137,13 +137,15 @@ def get_rds_connection():
     """
     Create a psycopg2 connection to the Aiven PostgreSQL instance.
     """
+    # Use sslmode=prefer for test environments, require for production
+    sslmode = os.getenv("DB_SSLMODE", "prefer")
     conn = psycopg2.connect(
         host=RDS_HOST,
         port=RDS_PORT,
         dbname=RDS_DB,
         user=RDS_USER,
         password=RDS_PWD,
-        sslmode="require",
+        sslmode=sslmode,
     )
     conn.autocommit = True
     return conn
