@@ -23,10 +23,10 @@ import os
 # This allows team members to keep credentials in project folder
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
-project_kaggle_dir = os.path.join(project_root, '.kaggle')
+project_kaggle_dir = os.path.join(project_root, ".kaggle")
 
-if os.path.exists(os.path.join(project_kaggle_dir, 'kaggle.json')):
-    os.environ['KAGGLE_CONFIG_DIR'] = project_kaggle_dir
+if os.path.exists(os.path.join(project_kaggle_dir, "kaggle.json")):
+    os.environ["KAGGLE_CONFIG_DIR"] = project_kaggle_dir
 # ================================
 
 from kaggle.api.kaggle_api_extended import KaggleApi
@@ -34,35 +34,35 @@ from kaggle.api.kaggle_api_extended import KaggleApi
 DATASET = "olistbr/brazilian-ecommerce"
 LOCAL_DIR = "DE_Project_Data"
 
+
 def download_kaggle_dataset():
     """Download Olist dataset from Kaggle."""
     try:
-        if 'KAGGLE_CONFIG_DIR' in os.environ:
-            print(f"[INFO] Using Kaggle credentials from: {os.environ['KAGGLE_CONFIG_DIR']}")
-        
+        if "KAGGLE_CONFIG_DIR" in os.environ:
+            print(
+                f"[INFO] Using Kaggle credentials from: {os.environ['KAGGLE_CONFIG_DIR']}"
+            )
+
         print("[INFO] Authenticating with Kaggle...")
         api = KaggleApi()
         api.authenticate()
 
         os.makedirs(LOCAL_DIR, exist_ok=True)
         print(f"[INFO] Downloading dataset '{DATASET}' to {LOCAL_DIR}...")
-        
-        api.dataset_download_files(
-            DATASET,
-            path=LOCAL_DIR,
-            unzip=True
-        )
-        
+
+        api.dataset_download_files(DATASET, path=LOCAL_DIR, unzip=True)
+
         # List downloaded files
-        files = [f for f in os.listdir(LOCAL_DIR) if f.endswith('.csv')]
+        files = [f for f in os.listdir(LOCAL_DIR) if f.endswith(".csv")]
         print(f"[SUCCESS] Downloaded {len(files)} CSV files:")
         for f in files:
             print(f"  - {f}")
         return True
-        
+
     except Exception as e:
         print(f"[ERROR] Failed to download dataset: {e}")
         return False
+
 
 if __name__ == "__main__":
     download_kaggle_dataset()

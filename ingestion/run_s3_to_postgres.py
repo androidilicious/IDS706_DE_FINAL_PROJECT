@@ -18,14 +18,15 @@ Features:
 from create_schema import create_schema, check_tables_exist
 from s3_to_rds import load_all_raw_tables
 
+
 def main():
     print("=" * 60)
     print("S3 -> PostgreSQL Data Load")
     print("=" * 60)
-    
+
     print("\nStep 1: Checking PostgreSQL Schema...")
     exists, tables = check_tables_exist()
-    
+
     if exists:
         print(f"[INFO] Found {len(tables)} existing tables")
         print("[INFO] Will replace data in existing tables")
@@ -34,7 +35,7 @@ def main():
         if not create_schema():
             print("[ERROR] Failed to create schema. Exiting.")
             return
-    
+
     print("\nStep 2: Loading data from S3 to PostgreSQL...")
     if load_all_raw_tables(truncate=True):
         print("\n" + "=" * 60)
@@ -44,6 +45,7 @@ def main():
         print("\n" + "=" * 60)
         print("DATA LOAD FAILED!")
         print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

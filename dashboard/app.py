@@ -49,14 +49,26 @@ st.set_page_config(
 @st.cache_resource
 def get_connection():
     """Create cached database connection."""
-    return psycopg2.connect(
-        host=os.getenv('DB_HOST'),
-        port=int(os.getenv('DB_PORT', 22446)),
-        dbname=os.getenv('DB_NAME'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD'),
-        sslmode='require'
-    )
+    # Use Streamlit secrets when deployed, fall back to .env for local
+    if hasattr(st, 'secrets') and 'DB_HOST' in st.secrets:
+        return psycopg2.connect(
+            host=st.secrets['DB_HOST'],
+            port=int(st.secrets.get('DB_PORT', 22446)),
+            dbname=st.secrets['DB_NAME'],
+            user=st.secrets['DB_USER'],
+            password=st.secrets['DB_PASSWORD'],
+            sslmode='require'
+        )
+    else:
+        load_dotenv()
+        return psycopg2.connect(
+            host=os.getenv('DB_HOST'),
+            port=int(os.getenv('DB_PORT', 22446)),
+            dbname=os.getenv('DB_NAME'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            sslmode='require'
+        )
 
 @st.cache_data(ttl=600)  # Cache for 10 minutes
 def run_query(query):

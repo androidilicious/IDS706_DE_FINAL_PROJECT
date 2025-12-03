@@ -28,25 +28,25 @@ from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 # ========= AWS CREDENTIALS =========
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 # ===================================
 
 # ========= S3 CONFIG =========
-S3_BUCKET = os.getenv('S3_BUCKET', 'de-27-team3')
-S3_PREFIX = os.getenv('S3_PREFIX', 'raw/')
-S3_REGION = os.getenv('S3_REGION', 'us-east-2')
+S3_BUCKET = os.getenv("S3_BUCKET", "de-27-team3")
+S3_PREFIX = os.getenv("S3_PREFIX", "raw/")
+S3_REGION = os.getenv("S3_REGION", "us-east-2")
 # =============================
 
 # ========= RDS CONFIG (Aiven PostgreSQL) =========
-RDS_HOST = os.getenv('DB_HOST')
-RDS_PORT = int(os.getenv('DB_PORT', 22446))
-RDS_DB = os.getenv('DB_NAME')
-RDS_USER = os.getenv('DB_USER')
-RDS_PWD = os.getenv('DB_PASSWORD')
+RDS_HOST = os.getenv("DB_HOST")
+RDS_PORT = int(os.getenv("DB_PORT", 22446))
+RDS_DB = os.getenv("DB_NAME")
+RDS_USER = os.getenv("DB_USER")
+RDS_PWD = os.getenv("DB_PASSWORD")
 # ============================================
 
 # ========= TABLE MAPPING =========
@@ -80,10 +80,8 @@ LOAD_ORDER = [
     "olist_products_dataset.csv",
     "olist_geolocation_dataset.csv",
     "product_category_name_translation.csv",
-    
     # Stage 2: Orders (depends on customers)
     "olist_orders_dataset.csv",
-    
     # Stage 3: Order-related tables (depend on orders, products, sellers)
     "olist_order_items_dataset.csv",
     "olist_order_payments_dataset.csv",
@@ -97,7 +95,7 @@ def get_s3_client():
         "s3",
         region_name=S3_REGION,
         aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
 
 
@@ -123,15 +121,15 @@ def download_key_to_temp(s3_client, key, tmp_dir):
     """
     filename = os.path.basename(key)
     local_path = os.path.join(tmp_dir, filename)
-    
+
     # Get file size
     response = s3_client.head_object(Bucket=S3_BUCKET, Key=key)
-    file_size_mb = response['ContentLength'] / (1024 * 1024)
-    
+    file_size_mb = response["ContentLength"] / (1024 * 1024)
+
     print(f"[INFO] Downloading {filename} ({file_size_mb:.2f} MB) from S3...")
     s3_client.download_file(S3_BUCKET, key, local_path)
     print(f"[INFO] Download complete: {filename}")
-    
+
     return local_path
 
 
@@ -145,7 +143,7 @@ def get_rds_connection():
         dbname=RDS_DB,
         user=RDS_USER,
         password=RDS_PWD,
-        sslmode='require'
+        sslmode="require",
     )
     conn.autocommit = True
     return conn
@@ -156,13 +154,16 @@ def table_exists(table_name, conn):
     Check if a table exists in the database.
     """
     with conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
                 WHERE table_schema = 'public' 
                 AND table_name = %s
             )
-        """, (table_name,))
+        """,
+            (table_name,),
+        )
         return cur.fetchone()[0]
 
 
@@ -184,17 +185,17 @@ def check_data_match(csv_path, table_name, conn):
         # Get CSV row count
         df = pd.read_csv(csv_path)
         csv_rows = len(df)
-        
+
         # Get database row count
         db_rows = get_table_row_count(table_name, conn)
-        
+
         # If row counts don't match, data is different
         if csv_rows != db_rows:
             return False, csv_rows, db_rows
-        
+
         # Row counts match - data is likely the same
         return True, csv_rows, db_rows
-        
+
     except Exception as e:
         print(f"[WARN] Could not compare data: {e}")
         return False, 0, 0
@@ -203,7 +204,7 @@ def check_data_match(csv_path, table_name, conn):
 def load_csv_into_table(csv_path, table_name, conn, truncate=True):
     """
     Load a local CSV file into a given raw table.
-    
+
     Args:
         csv_path: Path to CSV file
         table_name: Target table name
@@ -219,10 +220,10 @@ def load_csv_into_table(csv_path, table_name, conn, truncate=True):
 
     total_rows = len(df)
     print(f"[INFO] Found {total_rows:,} rows to load")
-    
+
     # Replace NaN with None for proper NULL handling
     df = df.where(pd.notna(df), None)
-    
+
     cols = list(df.columns)
     col_list_sql = ",".join(cols)
 
@@ -241,7 +242,9 @@ def load_csv_into_table(csv_path, table_name, conn, truncate=True):
         execute_values(cur, insert_sql, records, page_size=1000)
         print(f"[INFO] Insert complete!")
 
-    print(f"[SUCCESS] ✓ Loaded {total_rows:,} rows from {os.path.basename(csv_path)} into {table_name}.\n")
+    print(
+        f"[SUCCESS] ✓ Loaded {total_rows:,} rows from {os.path.basename(csv_path)} into {table_name}.\n"
+    )
 
 
 def load_all_raw_tables(truncate=True):
@@ -250,7 +253,7 @@ def load_all_raw_tables(truncate=True):
     - list CSVs under raw/ in S3
     - download each to a temp dir
     - load into the corresponding raw table in RDS
-    
+
     Args:
         truncate: If True, truncate tables before loading (replace mode)
     """
@@ -263,7 +266,7 @@ def load_all_raw_tables(truncate=True):
 
     # Create a map of filename to S3 key
     key_map = {os.path.basename(k): k for k in keys}
-    
+
     # Filter to only files we can process
     files_to_process = [f for f in LOAD_ORDER if f in key_map]
     total_files = len(files_to_process)
@@ -279,7 +282,7 @@ def load_all_raw_tables(truncate=True):
             for idx, filename in enumerate(files_to_process, 1):
                 key = key_map[filename]
                 table_name = CSV_TABLE_MAP[filename]
-                
+
                 print("=" * 70)
                 print(f"[{idx}/{total_files}] Processing: {filename}")
                 print(f"Target table: {table_name}")
@@ -287,34 +290,43 @@ def load_all_raw_tables(truncate=True):
 
                 # Check if table exists
                 if not table_exists(table_name, conn):
-                    print(f"[ERROR] Table {table_name} does not exist. Run create_schema.py first.")
+                    print(
+                        f"[ERROR] Table {table_name} does not exist. Run create_schema.py first."
+                    )
                     return False
 
                 local_path = download_key_to_temp(s3, key, tmp_dir)
-                
+
                 # Check if data already matches
                 print(f"[INFO] Checking if data needs updating...")
-                matches, csv_rows, db_rows = check_data_match(local_path, table_name, conn)
-                
+                matches, csv_rows, db_rows = check_data_match(
+                    local_path, table_name, conn
+                )
+
                 if matches:
-                    print(f"[SKIP] ✓ Data already up-to-date ({csv_rows:,} rows) - skipping load\n")
+                    print(
+                        f"[SKIP] ✓ Data already up-to-date ({csv_rows:,} rows) - skipping load\n"
+                    )
                     continue
                 else:
                     if db_rows > 0:
-                        print(f"[INFO] Data differs (CSV: {csv_rows:,} rows, DB: {db_rows:,} rows) - updating...")
+                        print(
+                            f"[INFO] Data differs (CSV: {csv_rows:,} rows, DB: {db_rows:,} rows) - updating..."
+                        )
                     else:
                         print(f"[INFO] Table empty - loading {csv_rows:,} rows...")
-                
+
                 load_csv_into_table(local_path, table_name, conn, truncate=truncate)
-            
+
             print("\n" + "=" * 70)
             print(f"[SUCCESS] ✓ Pipeline completed successfully!")
             print("=" * 70 + "\n")
             return True
-            
+
         except Exception as e:
             print(f"\n[ERROR] Failed to load tables: {e}")
             import traceback
+
             traceback.print_exc()
             return False
         finally:
